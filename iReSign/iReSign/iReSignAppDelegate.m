@@ -395,7 +395,30 @@ static NSString *kiTunesMetadataFileName            = @"iTunesMetadata";
 
 - (void)watchEntitlements:(NSFileHandle*)streamHandle {
     @autoreleasepool {
-        entitlementsResult = [[NSString alloc] initWithData:[streamHandle readDataToEndOfFile] encoding:NSASCIIStringEncoding];
+//        entitlementsResult = [[NSString alloc] initWithData:[streamHandle readDataToEndOfFile] encoding:NSASCIIStringEncoding];
+        
+        NSData *plistData = [streamHandle readDataToEndOfFile];
+        
+        NSMutableString *plistStr = [[NSMutableString alloc] initWithData:plistData encoding:NSUTF8StringEncoding];
+        
+        [plistStr replaceOccurrencesOfString:@"security: SecPolicySetValue: One or more parameters passed to a function were not valid." withString:@"" options:NSCaseInsensitiveSearch range:NSMakeRange(0, plistStr.length)];
+        
+        NSLog(@"======================================\n%@\n=====================================", plistStr);
+        [plistStr writeToFile:@"test.plist" atomically:YES encoding:NSUTF8StringEncoding error:nil];
+        
+        plistData = [plistStr dataUsingEncoding:NSUTF8StringEncoding];
+        
+        NSPropertyListFormat format;
+        NSError *error;
+        NSMutableDictionary* plist = [NSPropertyListSerialization propertyListWithData:plistData
+                                                                               options: NSPropertyListImmutable
+                                                                                format:NULL
+                                                                                 error:&error];
+        
+        NSLog(@"Erorr: %@", error);
+        
+        self.propertyList = plist;
+        
     }
 }
 
@@ -411,7 +434,7 @@ static NSString *kiTunesMetadataFileName            = @"iTunesMetadata";
 
 - (void)doEntitlementsEdit
 {
-    NSDictionary* entitlements = entitlementsResult.propertyList;
+    NSDictionary* entitlements = self.propertyList;
     entitlements = entitlements[@"Entitlements"];
     NSString* filePath = [workingPath stringByAppendingPathComponent:@"entitlements.plist"];
     NSData *xmlData = [NSPropertyListSerialization dataWithPropertyList:entitlements format:NSPropertyListXMLFormat_v1_0 options:kCFPropertyListImmutable error:nil];

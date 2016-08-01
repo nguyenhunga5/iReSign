@@ -60,6 +60,7 @@
 @property (unsafe_unretained) IBOutlet NSWindow *window;
 
 @property (nonatomic, strong) NSString *workingPath;
+@property (nonatomic, strong) NSDictionary *propertyList;
 
 - (IBAction)resign:(id)sender;
 - (IBAction)browse:(id)sender;
